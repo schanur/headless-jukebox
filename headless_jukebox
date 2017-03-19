@@ -1,0 +1,129 @@
+#!/usr/bin/env ruby
+# coding: utf-8
+
+require 'rubygems'
+require 'bundler/setup'
+
+require 'mpv'
+require 'pp'
+require 'io/console'
+
+
+# this will be called every time mpv sends an event back over the socket
+def something_happened(event)
+  puts "look ma! a callback: #{event.to_s}"
+end
+
+command_list = {
+  :deutschlandfunk         => [:command,      'loadfile', 'http://www.deutschlandradio.de/streaming/dlf_hq_ogg.m3u'    ],
+  :deutschlandradio_kultur => [:command,      'loadfile', 'http://www.deutschlandradio.de/streaming/dkultur_hq_ogg.m3u'],
+  :dradio_wissen           => [:command,      'loadfile', 'http://dradio-ogg-dwissen-l.akacast.akamaistream.net/7/192/135496/v1/gnl.akacast.akamaistream.net/dradio_ogg_dwissen_l'],
+
+  # :tagesschau              => [:command,      'loadfile', 'http://media.tagesschau.de/video/2017/0318/TV-20170318-2042-2301.webxl.h264.mp4'],
+  # :tagesschau              => [:command,      'loadfile', 'cat index.html | grep "<enclosure url" | cut -f 2 -d \'"\' | head -n 1'],
+
+
+  :volume0                 => [:set_property, 'ao-volume', '0'],
+  :volume20                => [:set_property, 'ao-volume', '20'],
+  :volume30                => [:set_property, 'ao-volume', '30'],
+  :volume40                => [:set_property, 'ao-volume', '40'],
+  :volume50                => [:set_property, 'ao-volume', '50'],
+  :volume60                => [:set_property, 'ao-volume', '60'],
+  :volume70                => [:set_property, 'ao-volume', '70'],
+  :volume80                => [:set_property, 'ao-volume', '80'],
+  :volume90                => [:set_property, 'ao-volume', '90'],
+  :volume100               => [:set_property, 'ao-volume', '100'],
+
+  :quit                    => [:quit],
+}
+
+keyboard_mapping = {
+  '1' => :volume0,
+  '2' => :volume20,
+  '3' => :volume30,
+  '4' => :volume40,
+  '5' => :volume50,
+  '6' => :volume60,
+  '7' => :volume70,
+  '8' => :volume80,
+  '9' => :volume90,
+  '0' => :volume100,
+  'ß' => :ignore,
+  '´' => :ignore,
+
+  'q' => :quit,
+  'w' => :deutschlandfunk,
+  'e' => :deutschlandradio_kultur,
+  'r' => :dradio_wissen,
+  't' => :ignore,
+  'z' => :ignore,
+  'u' => :ignore,
+  'i' => :ignore,
+  'o' => :ignore,
+  'p' => :ignore,
+  'ü' => :ignore,
+  '+' => :ignore,
+
+  'a' => :tagesschau,
+  's' => :ignore,
+  'd' => :ignore,
+  'f' => :ignore,
+  'g' => :ignore,
+  'h' => :ignore,
+  'j' => :ignore,
+  'k' => :ignore,
+  'l' => :ignore,
+  'ö' => :ignore,
+  'ä' => :ignore,
+  '#' => :ignore,
+
+  'y' => :ignore,
+  'x' => :ignore,
+  'c' => :ignore,
+  'v' => :ignore,
+  'b' => :ignore,
+  'n' => :ignore,
+  'm' => :ignore,
+  ',' => :ignore,
+  '.' => :ignore,
+  '-' => :ignore,
+}
+
+session = MPV::Session.new # contains both a MPV::Server and a MPV::Client
+session.callbacks << MPV::Callback.new(self, :something_happened)
+# pp   session.set_property "pause", true
+puts 'Version'
+puts session.command "get_version"
+
+puts "Command loop started.\n"
+
+quit = false
+while (1) do
+  pressed_key = STDIN.getch
+  puts "key: " + pressed_key
+  if keyboard_mapping.has_key? pressed_key
+    action = keyboard_mapping[pressed_key]
+  else
+    action = stop
+  end
+
+  command = command_list[action]
+  pp command
+  case command[0]
+  when :command
+    session.command      command[1], command[2]
+  when :set_property
+    session.set_property command[1], command[2]
+  when :ignore
+    continue
+  when :stop
+    quit = true
+    break
+  end
+
+  if quit == true
+    break
+  end
+end
+
+session.quit!
