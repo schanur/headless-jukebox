@@ -14,28 +14,44 @@ def something_happened(event)
   puts "look ma! a callback: #{event.to_s}"
 end
 
-command_list = {
-  :deutschlandfunk           => [:command,      'loadfile', 'http://www.deutschlandradio.de/streaming/dlf_hq_ogg.m3u'    ],
-  :deutschlandradio_kultur   => [:command,      'loadfile', 'http://www.deutschlandradio.de/streaming/dkultur_hq_ogg.m3u'],
-  :dradio_wissen             => [:command,      'loadfile', 'http://dradio-ogg-dwissen-l.akacast.akamaistream.net/7/192/135496/v1/gnl.akacast.akamaistream.net/dradio_ogg_dwissen_l'],
+application_mapping = {
+  :audio_stream => ['mpv', 'loadfile'],
+  :video_stream => ['omx', 'loadfile']
+}
 
-  :tagesschau              => [:command,      'loadfile', 'http://media.tagesschau.de/video/2017/0318/TV-20170318-2042-2301.webxl.h264.mp4'],
+
+
+def set_volume(active_player)
+  # case active_player do
+  #      when 'mpv'
+
+  #      when
+end
+
+
+
+command_list = {
+  :deutschlandfunk           => [:audio_stream,      'http://www.deutschlandradio.de/streaming/dlf_hq_ogg.m3u'    ],
+  :deutschlandradio_kultur   => [:audio_stream,      'http://www.deutschlandradio.de/streaming/dkultur_hq_ogg.m3u'],
+  :dradio_wissen             => [:audio_stream,      'http://dradio-ogg-dwissen-l.akacast.akamaistream.net/7/192/135496/v1/gnl.akacast.akamaistream.net/dradio_ogg_dwissen_l'],
+
+  :tagesschau                => [:video_stream,      'http://media.tagesschau.de/video/2017/0318/TV-20170318-2042-2301.webxl.h264.mp4'],
   # :tagesschau              => [:command,      'loadfile', 'cat index.html | grep "<enclosure url" | cut -f 2 -d \'"\' | head -n 1'],
 
 
-  :volume0                   => [:set_property, 'ao-volume', '0'],
-  :volume20                  => [:set_property, 'ao-volume', '20'],
-  :volume30                  => [:set_property, 'ao-volume', '30'],
-  :volume40                  => [:set_property, 'ao-volume', '40'],
-  :volume50                  => [:set_property, 'ao-volume', '50'],
-  :volume60                  => [:set_property, 'ao-volume', '60'],
-  :volume70                  => [:set_property, 'ao-volume', '70'],
-  :volume80                  => [:set_property, 'ao-volume', '80'],
-  :volume90                  => [:set_property, 'ao-volume', '90'],
-  :volume100                 => [:set_property, 'ao-volume', '100'],
+  :volume0                   => [:mpv_set_property,  'ao-volume', '0'],
+  :volume20                  => [:mpv_set_property,  'ao-volume', '20'],
+  :volume30                  => [:mpv_set_property,  'ao-volume', '30'],
+  :volume40                  => [:mpv_set_property,  'ao-volume', '40'],
+  :volume50                  => [:mpv_set_property,  'ao-volume', '50'],
+  :volume60                  => [:mpv_set_property,  'ao-volume', '60'],
+  :volume70                  => [:mpv_set_property,  'ao-volume', '70'],
+  :volume80                  => [:mpv_set_property,  'ao-volume', '80'],
+  :volume90                  => [:mpv_set_property,  'ao-volume', '90'],
+  :volume100                 => [:mpv_set_property,  'ao-volume', '100'],
 
-  :pause                     => [:set_property, 'pause',     'toggle'],
-  :stop                      => [:set_property, 'pause',     'toggle'],
+  :pause                     => [:mpv_set_property,  'pause',     'toggle'],
+  :stop                      => [:mpv_set_property,  'stop'],
 
   :quit                      => [:quit],
 
@@ -93,6 +109,11 @@ keyboard_mapping = {
   '-' => :quit,
 }
 
+module OMX
+  class Server < MPV::Server
+  end
+end
+
 session = MPV::Session.new # contains both a MPV::Server and a MPV::Client
 session.callbacks << MPV::Callback.new(self, :something_happened)
 # pp   session.set_property "pause", true
@@ -104,26 +125,51 @@ puts "Command loop started.\n"
 quit = false
 while (1) do
   pressed_key = STDIN.getch
-  puts "key: " + pressed_key
+  puts "-----------------------------------"
   if keyboard_mapping.has_key? pressed_key
     action = keyboard_mapping[pressed_key]
   else
-    action = stop
+    action = :stop
   end
 
   command = command_list[action]
-  pp command
-  case command[0]
-  when :command
-    session.command      command[1], command[2]
-  when :set_property
-    session.set_property command[1], command[2]
+  app_mapping = application_mapping[:audio_stream]
+
+  cmd = {:key                 => pressed_key,
+         :key_has_mapping     => keyboard_mapping.has_key?(pressed_key),
+         :high_level_action   => action,
+         :command_type        => command[0],
+         :command_param       => command[1],
+         :application         => app_mapping[0],
+         :application_command => app_mapping[1]
+        }
+
+  pp cmd
+  puts
+
+
+  # case cmd[:command_type]
+  case cmd[:command_type]
+  when :audio_stream
+    puts "audio_stream"
+    case cmd[:application]
+    when 'mpv'
+      puts "mpv"
+      session.command cmd[:application_command], cmd[:command_param]
+    when 'omx'
+      puts "omx"
+    end
+  when :mpv_set_property
+    puts "mpv_set_property"
+    session.set_property cmd[:command_param]# , command[2]
   when :ignore
+    puts "ignore"
     continue
   when :stop
+    puts "stop"
     session.set_property 'pause', 'true'
-    break
   when :quit
+    puts "quit"
     quit = true
     break
   end
