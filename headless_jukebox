@@ -14,12 +14,31 @@ def something_happened(event)
   puts "look ma! a callback: #{event.to_s}"
 end
 
-application_mapping = {
-  :audio_stream => ['mpv', 'loadfile'],
-  :video_stream => ['omx', 'loadfile']
+def platform()
+  :raspberry
+end
+
+# detailed_application_command = {
+#   :mpv_audio_stream => ['mpv',  'loadfile'],
+#   :omx_video_stream => ['omx',  'loadfile'],
+#   :alsa_set_volume  => ['alsa', ]
+# }
+
+platform_application_mapping = {
+  :raspberry => {
+    :audio_stream => :mpv_audio_stream,
+    :video_stream => :mpv_video_stream,
+    :set_volume   => []
+  }
+  :pc => {
+
+  }
 }
 
-
+def platform_mapping(platform, command_type)
+  platform_application_mapping[platform][command_type]
+  raise "No platform application mapping found"
+end
 
 def set_volume(active_player)
   # case active_player do
@@ -109,12 +128,14 @@ keyboard_mapping = {
   '-' => :quit,
 }
 
-module OMX
-  class Server < MPV::Server
-  end
-end
+# module OMX
+#   class Server < MPV::Server
+#   end
+# end
 
+puts "start MPV background session"
 session = MPV::Session.new # contains both a MPV::Server and a MPV::Client
+puts "done"
 session.callbacks << MPV::Callback.new(self, :something_happened)
 # pp   session.set_property "pause", true
 puts 'Version'
