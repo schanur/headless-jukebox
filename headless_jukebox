@@ -8,36 +8,96 @@ require 'mpv'
 require 'pp'
 require 'io/console'
 
+require 'open3'
 
-# this will be called every time mpv sends an event back over the socket
-def something_happened(event)
-  puts "look ma! a callback: #{event.to_s}"
+def run_cmd(command_str)
+  puts 'Run external program:      ' + command_str
+  # stdout = system(command_str) ; result=$?.success?
+  stdout = Open3.popen3(command_str) { |stdin, stdout, stderr, wait_thr| stdout.read }
+  puts 'External program returned: >> ' + stdout + ' <<'
+  # raise "Command failed: " + command_str if result != true
+  return stdout
 end
 
+def video_feed_url_to_video_url(feed_url)
+  run_cmd('curl -s http://www.tagesschau.de/download/podcast/index.html | grep ".h264.mp4" | cut -f 2 -d "\"" |head -n 1')
+    .gsub("\n", '')
+end
+
+platform_list = [
+  :raspberry,
+  :pc
+]
+
+# TODO: Better separation. Currently all ARM boards are recognized as Raspberry Pis.
 def platform()
-  :raspberry
+  arch, os, abi = RUBY_PLATFORM.split('-')
+  case arch
+  when 'x86_64'
+    :pc
+  when 'arm'
+    :raspberry
+  else
+    raise 'Unknown platform'
+  end
 end
 
-# detailed_application_command = {
-#   :mpv_audio_stream => ['mpv',  'loadfile'],
-#   :omx_video_stream => ['omx',  'loadfile'],
-#   :alsa_set_volume  => ['alsa', ]
-# }
 
-platform_application_mapping = {
-  :raspberry => {
+required_modules = {
+  :raspberry => [
+
+  ],
+  :pc => [
+
+  ]
+}
+
+$detailed_application_command = {
+  :mpv_audio_stream => ['mpv',  'command',          'loadfile'],
+  :mpv_video_stream => ['mpv',  'command',          'loadfile'],
+  :mpv_set_volume   => ['mpv',  'mpv_set_property', 'ao-volume'],
+
+  :omx_audio_stream => ['omx',  'command',          'loadfile'],
+  :omx_video_stream => ['omx',  'command',          'loadfile'],
+
+  :alsa_set_volume  => ['alsa', 'set'],
+}
+
+$platform_application_mapping = {
+  :pc => {
     :audio_stream => :mpv_audio_stream,
     :video_stream => :mpv_video_stream,
-    :set_volume   => []
-  }
-  :pc => {
-
+    :set_volume   => :mpv_set_volume
+  },
+  :raspberry => {
+    :audio_stream => :mpv_audio_stream,
+    :video_stream => :omx_video_stream,
+    :set_volume   => :alsa_set_volume
   }
 }
 
+def mpv_callback(event)
+  puts "mpv: #{event.to_s}"
+end
+
+def omx_callback(event)
+  puts "omx: #{event.to_s}"
+end
+
+def load_modules(module_list)
+  module_list.each { |module_name|
+    require module_name
+  }
+end
+
 def platform_mapping(platform, command_type)
-  platform_application_mapping[platform][command_type]
-  raise "No platform application mapping found"
+  raise "platform is nil" if platform.nil?
+  raise "command_type is nil" if command_type.nil?
+  puts "2: " + platform.to_s
+  puts "3: " + command_type.to_s
+  mapping = $platform_application_mapping[platform][command_type]
+  # raise "No platform application mapping found for platform:" + platform.to_s + " command_type: " + command_type if mapping.nil?
+  return mapping
 end
 
 def set_volume(active_player)
@@ -49,31 +109,32 @@ end
 
 
 
-command_list = {
+command_attributes = {
   :deutschlandfunk           => [:audio_stream,      'http://www.deutschlandradio.de/streaming/dlf_hq_ogg.m3u'    ],
   :deutschlandradio_kultur   => [:audio_stream,      'http://www.deutschlandradio.de/streaming/dkultur_hq_ogg.m3u'],
   :dradio_wissen             => [:audio_stream,      'http://dradio-ogg-dwissen-l.akacast.akamaistream.net/7/192/135496/v1/gnl.akacast.akamaistream.net/dradio_ogg_dwissen_l'],
 
-  :tagesschau                => [:video_stream,      'http://media.tagesschau.de/video/2017/0318/TV-20170318-2042-2301.webxl.h264.mp4'],
-  # :tagesschau              => [:command,      'loadfile', 'cat index.html | grep "<enclosure url" | cut -f 2 -d \'"\' | head -n 1'],
+  # :tagesschau                => [:video_stream,      'http://media.tagesschau.de/video/2017/0318/TV-20170318-2042-2301.webxl.h264.mp4'],
+  :tagesschau                => [:video_stream,      lambda { run_cmd('curl -s http://www.tagesschau.de/download/podcast/index.html | grep ".h264.mp4" | cut -f 2 -d "\"" |head -n 1').gsub("\n", '') }],
 
 
-  :volume0                   => [:mpv_set_property,  'ao-volume', '0'],
-  :volume20                  => [:mpv_set_property,  'ao-volume', '20'],
-  :volume30                  => [:mpv_set_property,  'ao-volume', '30'],
-  :volume40                  => [:mpv_set_property,  'ao-volume', '40'],
-  :volume50                  => [:mpv_set_property,  'ao-volume', '50'],
-  :volume60                  => [:mpv_set_property,  'ao-volume', '60'],
-  :volume70                  => [:mpv_set_property,  'ao-volume', '70'],
-  :volume80                  => [:mpv_set_property,  'ao-volume', '80'],
-  :volume90                  => [:mpv_set_property,  'ao-volume', '90'],
-  :volume100                 => [:mpv_set_property,  'ao-volume', '100'],
+  :volume0                   => [:set_volume,        '0'  ],
+  :volume20                  => [:set_volume,        '20' ],
+  :volume30                  => [:set_volume,        '30' ],
+  :volume40                  => [:set_volume,        '40' ],
+  :volume50                  => [:set_volume,        '50' ],
+  :volume60                  => [:set_volume,        '60' ],
+  :volume70                  => [:set_volume,        '70' ],
+  :volume80                  => [:set_volume,        '80' ],
+  :volume90                  => [:set_volume,        '90' ],
+  :volume100                 => [:set_volume,        '100'],
 
   :pause                     => [:mpv_set_property,  'pause',     'toggle'],
   :stop                      => [:mpv_set_property,  'stop'],
 
-  :quit                      => [:quit],
+  :ignore                    => [:ignore],
 
+  :quit                      => [:quit],
 }
 
 keyboard_mapping = {
@@ -143,56 +204,93 @@ puts session.command "get_version"
 
 puts "Command loop started.\n"
 
+platform = platform()
+puts 'Platform: ' + platform.to_s
+
 quit = false
 while (1) do
-  pressed_key = STDIN.getch
-  puts "-----------------------------------"
-  if keyboard_mapping.has_key? pressed_key
-    action = keyboard_mapping[pressed_key]
-  else
-    action = :stop
-  end
-
-  command = command_list[action]
-  app_mapping = application_mapping[:audio_stream]
-
-  cmd = {:key                 => pressed_key,
-         :key_has_mapping     => keyboard_mapping.has_key?(pressed_key),
-         :high_level_action   => action,
-         :command_type        => command[0],
-         :command_param       => command[1],
-         :application         => app_mapping[0],
-         :application_command => app_mapping[1]
-        }
-
-  pp cmd
-  puts
-
-
-  # case cmd[:command_type]
-  case cmd[:command_type]
-  when :audio_stream
-    puts "audio_stream"
-    case cmd[:application]
-    when 'mpv'
-      puts "mpv"
-      session.command cmd[:application_command], cmd[:command_param]
-    when 'omx'
-      puts "omx"
+  begin
+    pressed_key = STDIN.getch
+    puts "-----------------------------------"
+    if keyboard_mapping.has_key? pressed_key
+      action = keyboard_mapping[pressed_key]
+    else
+      action = :stop
     end
-  when :mpv_set_property
-    puts "mpv_set_property"
-    session.set_property cmd[:command_param]# , command[2]
-  when :ignore
-    puts "ignore"
-    continue
-  when :stop
-    puts "stop"
-    session.set_property 'pause', 'true'
-  when :quit
-    puts "quit"
+
+    command = command_attributes[action]
+    if command.nil?
+      command=[nil, nil]
+    end
+    puts ">>>" + command[0].to_s
+    app_mapping = platform_mapping(platform(), command[0])
+    puts ">>>"
+    pp app_mapping.to_s
+    detailed_application_command = $detailed_application_command[app_mapping]
+
+    cmd = {:platform                          => platform(),
+           :key                               => pressed_key,
+           :key_has_mapping                   => keyboard_mapping.has_key?(pressed_key),
+           :high_level_action                 => action,
+           :command_type                      => command[0],
+           :command_param                     => command[1],
+           :evaluated_command_param           => if command[1].respond_to? :call then command[1].call else command[1] end,
+           :command_has_platform_application  => app_mapping != nil,
+           :application                       => app_mapping,
+           :detailed_application_command      => detailed_application_command
+          }
+    #         :application                       => app_mapping[0],
+    #         :application_command               => app_mapping[1]
+
+    pp cmd
+    puts
+
+
+    # case cmd[:command_type]
+    case cmd[:command_type]
+    when :audio_stream
+      puts "audio_stream"
+      case cmd[:detailed_application_command][0]
+      when 'mpv'
+        puts "mpv"
+        # session.command cmd[:detailed_application_command[1]], cmd[:detailed_application_command[2]]
+        session.command cmd[:detailed_application_command][2], cmd[:evaluated_command_param]
+      when 'omx'
+        puts "omx"
+      else
+        raise "What is: " + cmd[:detailed_application_command][0].to_s
+      end
+    when :video_stream
+      puts "video_stream"
+      case cmd[:detailed_application_command][0]
+      when 'mpv'
+        puts "mpv"
+        # session.command cmd[:detailed_application_command[1]], cmd[:detailed_application_command[2]]
+        session.command cmd[:detailed_application_command][2], cmd[:evaluated_command_param]
+      when 'omx'
+        puts "omx"
+      else
+        raise "What is: " + cmd[:detailed_application_command][0].to_s
+      end
+      when :mpv_set_property
+      puts "mpv_set_property"
+      session.set_property cmd[:command_param]# , command[2]
+    when :ignore
+      puts "ignore"
+      continue
+    when :stop
+      puts "stop"
+      session.set_property 'pause', 'true'
+    when :quit
+      puts "quit"
+      quit = true
+      break
+    end
+
+  rescue Exception => e
+    puts e.message
+    puts e.backtrace.inspect
     quit = true
-    break
   end
 
   if quit == true
