@@ -4,7 +4,6 @@
 require 'rubygems'
 require 'bundler/setup'
 
-require 'mpv'
 require 'pp'
 require 'io/console'
 
@@ -45,10 +44,10 @@ end
 
 required_modules = {
   :raspberry => [
-
+    'mpv', 'omxplayer'
   ],
   :pc => [
-
+    'mpv'
   ]
 }
 
@@ -86,6 +85,7 @@ end
 
 def load_modules(module_list)
   module_list.each { |module_name|
+    puts "Load module: " + module_name
     require module_name
   }
 end
@@ -194,18 +194,28 @@ keyboard_mapping = {
 #   end
 # end
 
+platform = platform()
+puts 'Platform: ' + platform.to_s
+puts "Load modules"
+load_modules required_modules[platform]
 puts "start MPV background session"
-session = MPV::Session.new # contains both a MPV::Server and a MPV::Client
+mpv_session = MPV::Session.new # contains both a MPV::Server and a MPV::Client
 puts "done"
-session.callbacks << MPV::Callback.new(self, :something_happened)
+if platform == :raspberry
+  puts "start MPV background session"
+  omx_session = Omxplayer.instance
+  # Omxplayer.initialize
+  # omx_session.initialize
+  puts "done"
+end
+
+mpv_session.callbacks << MPV::Callback.new(self, :something_happened)
 # pp   session.set_property "pause", true
 puts 'Version'
-puts session.command "get_version"
+puts mpv_session.command "get_version"
 
 puts "Command loop started.\n"
 
-platform = platform()
-puts 'Platform: ' + platform.to_s
 
 quit = false
 while (1) do
@@ -253,8 +263,8 @@ while (1) do
       case cmd[:detailed_application_command][0]
       when 'mpv'
         puts "mpv"
-        # session.command cmd[:detailed_application_command[1]], cmd[:detailed_application_command[2]]
-        session.command cmd[:detailed_application_command][2], cmd[:evaluated_command_param]
+        # mpv_session.command cmd[:detailed_application_command[1]], cmd[:detailed_application_command[2]]
+        mpv_session.command cmd[:detailed_application_command][2], cmd[:evaluated_command_param]
       when 'omx'
         puts "omx"
       else
@@ -265,8 +275,8 @@ while (1) do
       case cmd[:detailed_application_command][0]
       when 'mpv'
         puts "mpv"
-        # session.command cmd[:detailed_application_command[1]], cmd[:detailed_application_command[2]]
-        session.command cmd[:detailed_application_command][2], cmd[:evaluated_command_param]
+        # mpv_session.command cmd[:detailed_application_command[1]], cmd[:detailed_application_command[2]]
+        mpv_session.command cmd[:detailed_application_command][2], cmd[:evaluated_command_param]
       when 'omx'
         puts "omx"
       else
@@ -274,13 +284,13 @@ while (1) do
       end
       when :mpv_set_property
       puts "mpv_set_property"
-      session.set_property cmd[:command_param]# , command[2]
+      mpv_session.set_property cmd[:command_param]# , command[2]
     when :ignore
       puts "ignore"
       continue
     when :stop
       puts "stop"
-      session.set_property 'pause', 'true'
+      mpv_session.set_property 'pause', 'true'
     when :quit
       puts "quit"
       quit = true
@@ -298,4 +308,4 @@ while (1) do
   end
 end
 
-session.quit!
+mpv_session.quit!
