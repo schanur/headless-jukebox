@@ -8,6 +8,8 @@ require 'pp'
 require 'io/console'
 
 require 'open3'
+require 'benchmark'
+
 
 def run_cmd(command_str)
   puts 'Run external program:      ' + command_str
@@ -198,8 +200,11 @@ platform = platform()
 puts 'Platform: ' + platform.to_s
 puts "Load modules"
 load_modules required_modules[platform]
+mpv_session = nil
 puts "start MPV background session"
-mpv_session = MPV::Session.new # contains both a MPV::Server and a MPV::Client
+puts Benchmark.measure {
+  mpv_session = MPV::Session.new # contains both a MPV::Server and a MPV::Client
+}.real
 puts "done"
 if platform == :raspberry
   puts "start MPV background session"
