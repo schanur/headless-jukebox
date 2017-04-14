@@ -10,6 +10,7 @@ require 'io/console'
 require 'open3'
 require 'benchmark'
 
+# require 'headless-jukebox'
 
 def run_cmd(command_str)
   puts 'Run external program:      ' + command_str
@@ -132,7 +133,8 @@ command_attributes = {
   :volume100                   => [:set_volume,        '100'],
 
   :pause                       => [:mpv_set_property,  'pause',     'toggle'],
-  :stop                        => [:mpv_set_property,  'stop'],
+  # :stop                        => [:mpv_set_property,  'stop'],
+  :stop                        => [:stop,  'stop'],
 
   :ignore                      => [:ignore],
 
@@ -206,13 +208,19 @@ puts Benchmark.measure {
   mpv_session = MPV::Session.new # contains both a MPV::Server and a MPV::Client
 }.real
 puts "done"
-if platform == :raspberry
-  puts "start MPV background session"
-  omx_session = Omxplayer.instance
-  # Omxplayer.initialize
-  # omx_session.initialize
-  puts "done"
-end
+omx_session = nil
+# if platform == :raspberry
+#   puts "start OMX background session"
+#   puts Benchmark.measure {
+#     omx_session = Omxplayer.instance
+#     # omx_session.open("silence_60.oga")
+#     omx_session.open("sintel-1280-stereo.mp4")
+#   }.real
+#   puts 'sleep'
+#   sleep 10
+#   puts 'done'
+#   omx_session.action(:pause)
+# end
 
 mpv_session.callbacks << MPV::Callback.new(self, :something_happened)
 # pp   session.set_property "pause", true
@@ -284,10 +292,13 @@ while (1) do
         mpv_session.command cmd[:detailed_application_command][2], cmd[:evaluated_command_param]
       when 'omx'
         puts "omx"
+        omx_session = Omxplayer.instance
+        omx_session.open(cmd[:evaluated_command_param])
+      # omx_session.
       else
         raise "What is: " + cmd[:detailed_application_command][0].to_s
       end
-      when :mpv_set_property
+    when :mpv_set_property
       puts "mpv_set_property"
       mpv_session.set_property cmd[:command_param]# , command[2]
     when :ignore
@@ -295,6 +306,7 @@ while (1) do
       continue
     when :stop
       puts "stop"
+      omx_session.action(:quit)
       mpv_session.set_property 'pause', 'true'
     when :quit
       puts "quit"
@@ -311,6 +323,10 @@ while (1) do
   if quit == true
     break
   end
+end
+
+if omx_session != nil?
+  omx_session.action(:quit)
 end
 
 mpv_session.quit!
