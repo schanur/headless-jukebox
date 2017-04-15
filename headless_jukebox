@@ -57,10 +57,14 @@ required_modules = {
 $detailed_application_command = {
   :mpv_audio_stream => ['mpv',  'command',          'loadfile'],
   :mpv_video_stream => ['mpv',  'command',          'loadfile'],
+  :mpv_audio_file   => ['mpv',  'command',          'loadfile'],
   :mpv_set_volume   => ['mpv',  'mpv_set_property', 'ao-volume'],
+
 
   :omx_audio_stream => ['omx',  'command',          'loadfile'],
   :omx_video_stream => ['omx',  'command',          'loadfile'],
+  :omx_audio_file   => ['omx',  'command',          'loadfile'],
+
 
   :alsa_set_volume  => ['alsa', 'set'],
 }
@@ -69,11 +73,13 @@ $platform_application_mapping = {
   :pc => {
     :audio_stream => :mpv_audio_stream,
     :video_stream => :mpv_video_stream,
+    :audio_file   => :mpv_audio_file,
     :set_volume   => :mpv_set_volume
   },
   :raspberry => {
     :audio_stream => :mpv_audio_stream,
     :video_stream => :omx_video_stream,
+    :audio_file   => :mpv_audio_file,
     :set_volume   => :alsa_set_volume
   }
 }
@@ -119,6 +125,9 @@ command_attributes = {
 
   :tagesschau                  => [:video_stream,      lambda { video_feed_url_to_video_url 'http://www.tagesschau.de/export/video-podcast/webxl/tagesschau/'}],
   :tagesschau_latest_news_show => [:video_stream,      lambda { video_feed_url_to_video_url 'http://www.tagesschau.de/download/podcast/index.html' }],
+
+  :marvel_epic_soundtrack      => [:audio_file,        '/home/pi/local/media/music/1_Hour_Epic_Battle_Marvel_Music.opus'],
+  :epic_soundtrack_1           => [:audio_file,        '/home/pi/local/media/music/epic_2.opus'],
 
 
   :volume0                     => [:set_volume,        '0'  ],
@@ -181,8 +190,8 @@ keyboard_mapping = {
   'ä' => :ignore,
   '#' => :ignore,
 
-  'y' => :ignore,
-  'x' => :ignore,
+  'y' => :marvel_epic_soundtrack,
+  'x' => :epic_soundtrack_1,
   'c' => :ignore,
   'v' => :ignore,
   'b' => :ignore,
@@ -271,7 +280,7 @@ while (1) do
 
     # case cmd[:command_type]
     case cmd[:command_type]
-    when :audio_stream
+    when :audio_stream, :audio_file
       puts "audio_stream"
       case cmd[:detailed_application_command][0]
       when 'mpv'
