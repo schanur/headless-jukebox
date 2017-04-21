@@ -10,6 +10,9 @@ $command_attributes = {
   :epic_soundtrack_1           => [:audio_file,        '/home/pi/local/media/music/epic_2.opus'],
   :ghibli_soundtrack           => [:audio_file,        '/home/pi/local/media/music/ghibli_soundtrack.opus'],
 
+  :classic_mix                 => [:audio_file,        '/home/pi/local/media/music/best_of_classic.opus'],
+  :dark_minimal_techo_mix      => [:audio_file,        '/home/pi/local/media/music/dark_minimal_techno_mix_set_2015.opus'],
+
   :volume0                     => [:set_volume,        '0'  ],
   :volume20                    => [:set_volume,        '20' ],
   :volume30                    => [:set_volume,        '30' ],
