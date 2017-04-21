@@ -8,7 +8,7 @@ $command_attributes = {
 
   :marvel_epic_soundtrack      => [:audio_file,        '/home/pi/local/media/music/1_Hour_Epic_Battle_Marvel_Music.opus'],
   :epic_soundtrack_1           => [:audio_file,        '/home/pi/local/media/music/epic_2.opus'],
-
+  :ghibli_soundtrack           => [:audio_file,        '/home/pi/local/media/music/ghibli_soundtrack.opus'],
 
   :volume0                     => [:set_volume,        '0'  ],
   :volume20                    => [:set_volume,        '20' ],
