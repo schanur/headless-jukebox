@@ -1,0 +1,12 @@
+#!/bin/bash
+
+MAX_ITERATION_COUNT=10000
+
+I=0
+while [ ${I} -le ${MAX_ITERATION_COUNT} ]; do
+    (( I++ ))
+    echo "Start attempt: ${I}"
+    ./headless-jukebox.rb
+    killall mpv
+    killall omxplayer
+done
