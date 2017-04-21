@@ -187,7 +187,7 @@ while (1) do
       mpv_session.set_property cmd[:command_param]# , command[2]
     when :ignore
       puts "ignore"
-      continue
+      next
     when :stop
       puts "stop"
       omx_session.action(:quit)
