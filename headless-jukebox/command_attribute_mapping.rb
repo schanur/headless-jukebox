@@ -13,6 +13,8 @@ $command_attributes = {
   :classic_mix                 => [:audio_file,        '/home/pi/local/media/music/best_of_classic.opus'],
   :dark_minimal_techo_mix      => [:audio_file,        '/home/pi/local/media/music/dark_minimal_techno_mix_set_2015.opus'],
 
+  :secret_of_mana_soundtrack   => [:audio_file,        lambda { random_media_file_in_path '/media/fs1/music/soundtracks/Games/Secret_of_Mana'}],
+
   :volume0                     => [:set_volume,        '0'  ],
   :volume20                    => [:set_volume,        '20' ],
   :volume30                    => [:set_volume,        '30' ],

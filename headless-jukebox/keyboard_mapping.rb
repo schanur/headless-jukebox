@@ -42,7 +42,7 @@ $keyboard_mapping = {
 
   'y' => :marvel_epic_soundtrack,
   'x' => :epic_soundtrack_1,
-  'c' => :ignore,
+  'c' => :secret_of_mana_soundtrack,
   'v' => :ghibli_soundtrack,
   'b' => :ignore,
   'n' => :classic_mix,
