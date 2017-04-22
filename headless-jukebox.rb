@@ -10,13 +10,78 @@ require 'io/console'
 require 'open3'
 require 'benchmark'
 
-require_relative 'headless-jukebox/command_attribute_mapping.rb'
-require_relative 'headless-jukebox/command_param_function_helpers.rb'
-require_relative 'headless-jukebox/command_param_functions.rb'
-require_relative 'headless-jukebox/keyboard_mapping.rb'
-require_relative 'headless-jukebox/platform_mapping.rb'
+$special_key_map = {
+  # F keys
+  "\eOP"    => 'F1',
+  "\eOQ"    => 'F2',
+  "\eOR"    => 'F3',
+  "\eOS"    => 'F4',
+  "\e[15~"  => 'F5',
+  "\e[17~"  => 'F6',
+  "\e[18~"  => 'F7',
+  "\e[19~"  => 'F8',
+  "\e[20~"  => 'F9',
+  "\e[21~"  => 'F10',
+  "\e[23~"  => 'F11',
+  "\e[24~"  => 'F12',
 
+  # Arrow keys
+  "\e[A"    => 'up',
+  "\e[B"    => 'down',
+  "\e[C"    => 'right',
+  "\e[D"    => 'left',
 
+  "\177"    => 'backspace',
+  "\004"    => 'delete',
+  "\e[3~"   => 'alternate_delete',
+
+  # Control sequences
+  "\u0003"  => 'C-c'
+}
+
+def get_pretty_char()
+  STDIN.echo = false
+  STDIN.raw!
+
+  input = STDIN.getc.chr
+  # Read escaped characters.
+  if input == "\e" then
+    input << STDIN.read_nonblock(3) rescue nil
+    input << STDIN.read_nonblock(2) rescue nil
+  end
+ensure
+  STDIN.echo = true
+  STDIN.cooked!
+
+  puts "PARSE KEY: " + input
+  if $special_key_map.include? input
+    puts "Special character: " + input + " - " + $special_key_map[input]
+    parsed_character = $special_key_map[input]
+  elsif input =~ /^.$/
+    puts "Normal character: " + input
+    parsed_character = input
+  else
+    puts "Unhandled character: " + input
+    parsed_character = "unknown"
+  end
+
+  return parsed_character
+end
+
+def hot_reload()
+  module_list = [
+    'headless-jukebox/command_attribute_mapping.rb',
+    'headless-jukebox/command_param_function_helpers.rb',
+    'headless-jukebox/command_param_functions.rb',
+    'headless-jukebox/keyboard_mapping.rb',
+    'headless-jukebox/platform_mapping.rb'
+  ]
+
+  module_list.each do |module_filename|
+    puts 'Load module: ' + module_filename
+    load module_filename
+  end
+end
 
 platform_list = [
   :raspberry,
@@ -84,8 +149,12 @@ end
 
 platform = platform()
 puts 'Platform: ' + platform.to_s
-puts "Load modules"
+puts "Load platform modules"
 load_modules required_modules[platform]
+
+puts "Load modules in headless-jukebox for the first time"
+hot_reload
+
 mpv_session = nil
 puts "start MPV background session"
 puts Benchmark.measure {
@@ -117,12 +186,13 @@ puts "Command loop started.\n"
 quit = false
 while (1) do
   begin
-    pressed_key = STDIN.getch
+    pressed_key = get_pretty_char()
     puts "-----------------------------------"
     if $keyboard_mapping.has_key? pressed_key
       action = $keyboard_mapping[pressed_key]
     else
-      action = :stop
+      puts "Key has no mapping: " + pressed_key
+      next
     end
 
     command = $command_attributes[action]
@@ -192,6 +262,9 @@ while (1) do
       puts "stop"
       omx_session.action(:quit)
       mpv_session.set_property 'pause', 'true'
+    when :hot_reload
+      puts "Reloading all config code files:"
+      hot_reload
     when :quit
       puts "quit"
       quit = true

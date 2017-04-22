@@ -36,5 +36,6 @@ $command_attributes = {
 
   :ignore                      => [:ignore],
 
+  :hot_reload                  => [:hot_reload],
   :quit                        => [:quit],
 }

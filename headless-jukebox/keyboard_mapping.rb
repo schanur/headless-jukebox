@@ -55,4 +55,17 @@ $keyboard_mapping = {
   '*'   => :custom_2,
   '-'   => :custom_3,
 
+  # F keys
+  'F1'  => :ignore,
+  'F2'  => :ignore,
+  'F3'  => :ignore,
+  'F4'  => :ignore,
+  'F5'  => :ignore,
+  'F6'  => :ignore,
+  'F7'  => :ignore,
+  'F8'  => :ignore,
+  'F9'  => :ignore,
+  'F10' => :ignore,
+  'F11' => :hot_reload,
+  'F12' => :quit,
 }
