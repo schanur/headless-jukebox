@@ -15,6 +15,10 @@ $command_attributes = {
 
   :secret_of_mana_soundtrack   => [:audio_file,        lambda { random_media_file_in_path '/media/fs1/music/soundtracks/Games/Secret_of_Mana'}],
 
+  :custom_1                    => [:audio_file,        '/home/pi/local/media/music/custom1.opus'],
+  :custom_2                    => [:audio_file,        '/home/pi/local/media/music/custom2.opus'],
+  :custom_3                    => [:audio_file,        '/home/pi/local/media/music/custom3.opus'],
+
   :volume0                     => [:set_volume,        '0'  ],
   :volume20                    => [:set_volume,        '20' ],
   :volume30                    => [:set_volume,        '30' ],
