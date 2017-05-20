@@ -65,7 +65,7 @@ $keyboard_mapping = {
   'F7'  => :ignore,
   'F8'  => :ignore,
   'F9'  => :ignore,
-  'F10' => :ignore,
+  'F10' => :status,
   'F11' => :hot_reload,
   'F12' => :quit,
 }

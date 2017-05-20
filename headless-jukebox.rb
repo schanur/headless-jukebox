@@ -262,6 +262,8 @@ while (1) do
       puts "stop"
       omx_session.action(:quit)
       mpv_session.set_property 'pause', 'true'
+    when :status
+      pp omx_session.status
     when :hot_reload
       puts "Reloading all config code files:"
       hot_reload
