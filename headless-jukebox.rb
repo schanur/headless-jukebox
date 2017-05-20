@@ -260,7 +260,7 @@ while (1) do
       next
     when :stop
       puts "stop"
-      omx_session.action(:quit)
+      omx_session.action('quit')
       mpv_session.set_property 'pause', 'true'
     when :status
       pp omx_session.status
@@ -274,6 +274,7 @@ while (1) do
     end
 
   rescue Exception => e
+    puts "Handled exception:"
     puts e.message
     puts e.backtrace.inspect
     quit = true
@@ -285,7 +286,7 @@ while (1) do
 end
 
 if omx_session != nil?
-  omx_session.action(:quit)
+  omx_session.action('quit')
 end
 
 mpv_session.quit!
