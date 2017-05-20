@@ -162,18 +162,18 @@ puts Benchmark.measure {
 }.real
 puts "done"
 omx_session = nil
-# if platform == :raspberry
-#   puts "start OMX background session"
-#   puts Benchmark.measure {
-#     omx_session = Omxplayer.instance
-#     # omx_session.open("silence_60.oga")
-#     omx_session.open("sintel-1280-stereo.mp4")
-#   }.real
-#   puts 'sleep'
-#   sleep 10
-#   puts 'done'
-#   omx_session.action(:pause)
-# end
+if platform == :raspberry
+  puts "start OMX background session"
+  puts Benchmark.measure {
+    omx_session = Omxplayer.instance
+    # omx_session.open("silence_60.oga")
+    omx_session.open("sintel-1280-stereo.mp4")
+  }.real
+  puts 'sleep'
+  sleep 10
+  puts 'done'
+  omx_session.action(:pause)
+end
 
 mpv_session.callbacks << MPV::Callback.new(self, :something_happened)
 # pp   session.set_property "pause", true
