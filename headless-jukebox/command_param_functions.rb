@@ -30,3 +30,8 @@ def random_media_file_in_path(path)
   raise "Path does not exist:" + path if !File.directory?(path)
   random_media_file_from_list(absolute_file_entries(path))
 end
+
+def random_media_file_list_from_random_sub_path(random_walk_start_path)
+  raise "Path does not exist:" + path if !File.directory?(path)
+  raise "Not implemented"
+end
