@@ -14,7 +14,7 @@ $command_attributes = {
   :marvel_epic_soundtrack      => [:audio_file,        '/home/pi/local/media/music/1_Hour_Epic_Battle_Marvel_Music.opus'],
   :epic_soundtrack_1           => [:audio_file,        '/home/pi/local/media/music/epic_2.opus'],
   :ghibli_soundtrack           => [:audio_file,        '/home/pi/local/media/music/ghibli_soundtrack.opus'],
-  :amelie_soundtrack           => [:audio_file,        lambda { random_media_file_in_path '/media/fs1/music/soundtracks/Die_fabelhafte_Welt_der_Amelie'}],
+  :amelie_soundtrack           => [:audio_playlist,    lambda { random_media_file_list_in_path '/media/fs1/music/soundtracks/Die_fabelhafte_Welt_der_Amelie'}],
   :classic_mix                 => [:audio_file,        '/home/pi/local/media/music/best_of_classic.opus'],
   :dark_minimal_techo_mix      => [:audio_file,        '/home/pi/local/media/music/dark_minimal_techno_mix_set_2015.opus'],
 
