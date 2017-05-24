@@ -1,7 +1,12 @@
 $command_attributes = {
-  :deutschlandfunk             => [:audio_stream,      'http://www.deutschlandradio.de/streaming/dlf_hq_ogg.m3u'    ],
-  :deutschlandradio_kultur     => [:audio_stream,      'http://www.deutschlandradio.de/streaming/dkultur_hq_ogg.m3u'],
-  :dradio_wissen               => [:audio_stream,      'http://dradio-ogg-dwissen-l.akacast.akamaistream.net/7/192/135496/v1/gnl.akacast.akamaistream.net/dradio_ogg_dwissen_l'],
+  # :deutschlandfunk             => [:audio_stream,      'http://www.deutschlandradio.de/streaming/dlf.m3u'    ],
+  # :deutschlandradio_kultur     => [:audio_stream,      'http://www.deutschlandradio.de/streaming/dkultur.m3u'],
+  # :dradio_wissen               => [:audio_stream,      'http://www.deutschlandradio.de/streaming/dradiowissen.m3u'],
+
+  :deutschlandfunk             => [:audio_stream,      'http://st01.dlf.de/dlf/01/104/ogg/stream.ogg'],
+  :deutschlandradio_kultur     => [:audio_stream,      'http://st02.dlf.de/dlf/02/104/ogg/stream.ogg'],
+  :dradio_wissen               => [:audio_stream,      'http://st03.dlf.de/dlf/03/104/ogg/stream.ogg'],
+  :dlf_dokumente_und_debatten  => [:audio_stream,      'http://st04.dlf.de/dlf/03/104/ogg/stream.ogg'],
 
   :tagesschau                  => [:video_stream,      lambda { video_feed_url_to_video_url 'http://www.tagesschau.de/export/video-podcast/webxl/tagesschau/'}],
   :tagesschau_latest_news_show => [:video_stream,      lambda { video_feed_url_to_video_url 'http://www.tagesschau.de/download/podcast/index.html' }],
