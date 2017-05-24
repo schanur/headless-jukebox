@@ -14,14 +14,6 @@ def random_media_file_from_list(filename_list)
   raise "No media file found in list of files."
 end
 
-# Filter out all non media filenames.
-def media_file_list_from_list(filename_list)
-  filename_list.select do |filename|
-    puts "Drop " + + ". No media filename" if !is_media_file(filename)
-    is_media_file(filename)
-  end
-end
-
 # Scramble order and filter out all non media filenames.
 def random_media_file_list_from_list(filename_list)
   media_file_list_from_list(filename_list).shuffle

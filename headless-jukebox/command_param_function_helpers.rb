@@ -98,3 +98,11 @@ end
 def is_media_file(filename)
   is_audio_file(filename) or is_video_file(filename)
 end
+
+# Filter out all non media filenames.
+def media_file_list_from_list(filename_list)
+  filename_list.select do |filename|
+    puts "Drop file. No media file: " + filename if !is_media_file(filename)
+    is_media_file(filename)
+  end
+end
