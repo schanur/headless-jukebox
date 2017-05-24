@@ -24,9 +24,8 @@ end
 
 # Scramble order and filter out all non media filenames.
 def random_media_file_list_from_list(filename_list)
-  media_file_list_from_list.shuffle
+  media_file_list_from_list(filename_list).shuffle
 end
-
 
 def random_media_file_list_in_path(path)
   raise "Path does not exist:" + path if !File.directory?(path)

@@ -222,9 +222,32 @@ while (1) do
     pp cmd
     puts
 
-
     # case cmd[:command_type]
     case cmd[:command_type]
+    when :audio_playlist
+      puts cmd[:command_type].to_s
+      case cmd[:detailed_application_command][0]
+      when 'mpv'
+        puts "mpv"
+        case cmd[:detailed_application_command][1]
+        when 'custom'
+          raise "Parameter is no array" unless cmd[:evaluated_command_param].kind_of?(Array)
+          raise "Array is empty"        unless cmd[:evaluated_command_param].any?
+          media_file_list = cmd[:evaluated_command_param]
+          first_track = media_file_list[0]
+          append_track_list = media_file_list.drop 1
+          puts "First track: " + first_track
+          mpv_session.command 'loadfile', first_track
+          append_track_list.each { |track|
+            puts "Append     : " + track
+            mpv_session.command 'loadfile', track, 'append'
+          }
+        else
+          raise "What is: " + cmd[:detailed_application_command][1].to_s
+        end
+      else
+        raise "What is: " + cmd[:detailed_application_command][0].to_s
+      end
     when :audio_stream, :audio_file
       puts cmd[:command_type].to_s
       case cmd[:detailed_application_command][0]
@@ -242,8 +265,12 @@ while (1) do
       case cmd[:detailed_application_command][0]
       when 'mpv'
         puts "mpv"
-        # mpv_session.command cmd[:detailed_application_command[1]], cmd[:detailed_application_command[2]]
-        mpv_session.command cmd[:detailed_application_command][2], cmd[:evaluated_command_param]
+        case cmd[:detailed_application_command][1]
+        when 'command'
+          mpv_session.command cmd[:detailed_application_command][2], cmd[:evaluated_command_param]
+        else
+          raise "What is: " + cmd[:detailed_application_command][1].to_s
+        end
       when 'omx'
         puts "omx"
         omx_session = Omxplayer.instance
